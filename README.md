@@ -13,7 +13,9 @@ rosrun ros_record_rgbd_images record_color_depth_images_to_disk.py \
     --dst_folder output
 ```
 
-Unit test:
+Unit test with local data:
 ```
 bash run_unit_test.py
 ```
+
+TODO: Add a test case of recording images directly from Realsense camera.
