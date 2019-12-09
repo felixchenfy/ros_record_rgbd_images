@@ -1,0 +1,4 @@
+*.pyc
+build/
+.vscode/
+output
