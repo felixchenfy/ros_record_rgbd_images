@@ -1,4 +1,4 @@
-# Press key to record color/depth images from ROS Topics
+# Press key to record color/depth images from ROS topics
 
 Keys:
 * `a`: Save a single pair of color/depth images to folder.
@@ -8,14 +8,19 @@ Keys:
 Example of usage:
 ```
 rosrun ros_record_rgbd_images record_color_depth_images_to_disk.py \
-    --depth_topic test_data/depth \
-    --color_topic test_data/color
-    --dst_folder output
+    --depth_topic camera/aligned_depth_to_color/image_raw \
+    --color_topic camera/color/image_raw \
+    --dst_folder output \
+    --max_frame_rate 10.0
 ```
 
-Unit test with local data:
+Test with local data:
 ```
 bash run_unit_test.py
 ```
 
-TODO: Add a test case of recording images directly from Realsense camera.
+Test on Realsense:
+```
+roslaunch ros_record_rgbd_images run_realsense.launch 
+roslaunch ros_record_rgbd_images run_record_images.launch 
+```

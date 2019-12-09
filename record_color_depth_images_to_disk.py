@@ -22,6 +22,12 @@ COLOR_NAME = "color_"
 DEPTH_NAME = "depth_"
 
 
+def add_ROOT_to_relative_path(path):
+    if path and path[0] != "/":
+        path = ROOT + "/" + path
+    return path
+
+
 def parse_command_line_arguments():
 
     parser = argparse.ArgumentParser(
@@ -35,8 +41,17 @@ def parse_command_line_arguments():
     parser.add_argument("-f", "--dst_folder", required=False, type=str,
                         default=DST_FOLDER,
                         help="Dst folder to save images.")
+    parser.add_argument("-r", "--max_frame_rate", required=False, type=float,
+                        default=10.0)
 
-    args = parser.parse_args(rospy.myargv()[1:])
+    inputs = rospy.myargv()[1:]
+    inputs = [s for s in inputs if s.replace(" ", "") != ""]  # Remove blanks.
+
+    args = parser.parse_args(inputs)
+
+    # Relative path to absolute path.
+    args.dst_folder = add_ROOT_to_relative_path(args.dst_folder)
+
     return args
 
 
@@ -96,7 +111,7 @@ class KeyProcessorAndImageRecorder(object):
         if key == KEY_START_RECORDING_VIDEO and self._is_recording == False:
             self._is_recording = True
             self._cnt_img_in_video_clip = 0
-            self._dst_subfolder = self._dst_folder + "_" + get_time() + "/"
+            self._dst_subfolder = self._dst_folder + get_time() + "/"
 
             if not os.path.exists(self._dst_subfolder):
                 os.makedirs(self._dst_subfolder)
@@ -125,6 +140,7 @@ def main(args):
     key_proc = KeyProcessorAndImageRecorder(args.dst_folder)
 
     # -- Loop, subscribe images, process key events, and save images.
+    timer = rospy.Rate(args.max_frame_rate)
     while not rospy.is_shutdown():
 
         if sub_color.has_image() and sub_depth.has_image():
@@ -139,11 +155,11 @@ def main(args):
 
             key = np.uint8(cv2.waitKey(10))
             if chr(key).lower() == KEY_QUIT_PROGRAM:
-                break 
+                break
 
             key_proc.check_key_and_save_image(key, color, depth)
 
-        rospy.sleep(0.005)
+        timer.sleep()
 
 
 if __name__ == '__main__':

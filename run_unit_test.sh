@@ -18,7 +18,7 @@ publish_images(){
     ROOT=$(rospack find ros_record_rgbd_images)
     rosrun ros_pub_and_sub_rgbd_and_cloud pub_rgbd_and_cloud.py \
         --base_dir $ROOT \
-        --config_file $ROOT/launch/pub_rgbd_config.yaml
+        --config_file $ROOT/config/pub_rgbd_config.yaml
     # Data folder path == `base_dir` + relative path in `config_file`
 }
 
@@ -29,9 +29,10 @@ record_images(){
     cd $ROOT
     chmod a+x $FILE 
     rosrun ros_record_rgbd_images $FILE \
-        --depth_topic test_data/depth \
-        --color_topic test_data/color \
-        --dst_folder output
+        --depth_topic camera/aligned_depth_to_color/image_raw \
+        --color_topic camera/color/image_raw \
+        --dst_folder output \
+        --max_frame_rate 10.0
 }
 
 
