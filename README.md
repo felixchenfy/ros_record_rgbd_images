@@ -11,7 +11,8 @@ rosrun ros_record_rgbd_images record_color_depth_images_to_disk.py \
     --depth_topic camera/aligned_depth_to_color/image_raw \
     --color_topic camera/color/image_raw \
     --dst_folder output \
-    --max_frame_rate 10.0
+    --max_frame_rate 10.0 \
+    --save_to_separate_folder true
 ```
 
 Test with local data:

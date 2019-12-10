@@ -17,15 +17,25 @@ KEY_RECORD_SINGLE_IMAGE = 'a'
 KEY_START_RECORDING_VIDEO = 's'
 KEY_STOP_RECORDING_VIDEO = 'd'
 KEY_QUIT_PROGRAM = 'q'
-DST_FOLDER = ROOT + "output/"
-COLOR_NAME = "color_"
-DEPTH_NAME = "depth_"
+COLOR_NAME = "color"
+DEPTH_NAME = "depth"
+TO_SEPARATE_FOLDER = None  # To be set by args.
 
 
 def add_ROOT_to_relative_path(path):
     if path and path[0] != "/":
         path = ROOT + "/" + path
     return path
+
+
+def Bool(v):
+    ''' A bool class for argparser. '''
+    if v.lower() in ('yes', 'true', 't', 'y', '1'):
+        return True
+    elif v.lower() in ('no', 'false', 'f', 'n', '0'):
+        return False
+    else:
+        raise argparse.ArgumentTypeError('Boolean value expected.')
 
 
 def parse_command_line_arguments():
@@ -39,10 +49,14 @@ def parse_command_line_arguments():
     parser.add_argument("-d", "--depth_topic", required=True, type=str,
                         help="")
     parser.add_argument("-f", "--dst_folder", required=False, type=str,
-                        default=DST_FOLDER,
+                        default=ROOT + "output/",
                         help="Dst folder to save images.")
     parser.add_argument("-r", "--max_frame_rate", required=False, type=float,
                         default=10.0)
+    parser.add_argument("-t", "--save_to_separate_folder", required=False,
+                        type=Bool,
+                        default=False,
+                        help="Whether save color/depth images to separate folder.")
 
     inputs = rospy.myargv()[1:]
     inputs = [s for s in inputs if s.replace(" ", "") != ""]  # Remove blanks.
@@ -53,6 +67,11 @@ def parse_command_line_arguments():
     args.dst_folder = add_ROOT_to_relative_path(args.dst_folder)
 
     return args
+
+
+def makedir(folder):
+    if not os.path.exists(folder):
+        os.makedirs(folder)
 
 
 def get_time():
@@ -66,9 +85,12 @@ def int2str(num, blank):
 
 
 def write_image(dst_folder, color, depth, index, blank=5, img_suffix=".png"):
+    separator = "/" if TO_SEPARATE_FOLDER else "_"
     suffix = int2str(index, blank) + img_suffix
-    filename_color = dst_folder + "/" + COLOR_NAME + suffix
-    filename_depth = dst_folder + "/" + DEPTH_NAME + suffix
+    filename_color = dst_folder + "/" + COLOR_NAME + separator + suffix
+    filename_depth = dst_folder + "/" + DEPTH_NAME + separator + suffix
+    makedir(os.path.dirname(filename_color))
+    makedir(os.path.dirname(filename_depth))
     cv2.imwrite(filename_color, color)
     cv2.imwrite(filename_depth, depth)
     print("Write color image to: " + filename_color)
@@ -82,8 +104,7 @@ class KeyProcessorAndImageRecorder(object):
         # Folder for saving single image.
         self._dst_folder = dst_folder + "/"
         self._cnt_single_img = 0
-        if not os.path.exists(self._dst_folder):
-            os.makedirs(self._dst_folder)
+        makedir(self._dst_folder)
 
         # Folder for saving video frames.
         self._dst_subfolder = None
@@ -138,6 +159,10 @@ def main(args):
     sub_color = ColorImageSubscriber(args.color_topic)
     sub_depth = DepthImageSubscriber(args.depth_topic)
     key_proc = KeyProcessorAndImageRecorder(args.dst_folder)
+
+    # -- Settings
+    global TO_SEPARATE_FOLDER
+    TO_SEPARATE_FOLDER = args.save_to_separate_folder
 
     # -- Loop, subscribe images, process key events, and save images.
     timer = rospy.Rate(args.max_frame_rate)
