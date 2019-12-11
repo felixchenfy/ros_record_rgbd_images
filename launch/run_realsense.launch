@@ -46,7 +46,7 @@
         args="-d $(find ros_record_rgbd_images)/config/rviz_realsense_color_depth_pcl.rviz" />
     <node pkg="tf" type="static_transform_publisher"
         name="set_camera_pose_at_origin"
-        args="0 0 0 0 0 0 1 camera_link base 10"
+        args="0 0 0 0 0 0 1 base camera_link 10"
     />
 
     <!-- Main topics:
